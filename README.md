@@ -1,7 +1,7 @@
 CyberShield V3: Advanced Security Portal
 
 Internship Project: Weeks 4, 5, and 6
-Intern: mrjohn
+Intern: Syed Zunair Hussain
 Environment: Kali Linux / Node.js
 
 PROJECT OVERVIEW
@@ -77,6 +77,6 @@ INSTALLATION AND SETUP
 git clone [URL]
 npm install
 npx snyk test
-node app2.js
+node app.js
 tail -f security.log
 
