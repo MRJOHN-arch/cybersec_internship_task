@@ -1,78 +1,82 @@
 CyberShield V3: Advanced Security Portal
 
-Internship Project: Weeks 4 & 5 Hardening & Exploitation
+Internship Project: Weeks 4, 5, and 6
+Intern: mrjohn
+Environment: Kali Linux / Node.js
 
-This repository contains a hardened Node.js application developed during the Cybersecurity Internship. The project demonstrates a transition from a vulnerable legacy system to a modern, secure architecture.
+PROJECT OVERVIEW
 
-Current Security Status: Week 5 (Hardened)
+This repository documents the transition from a vulnerable legacy system to a hardened architecture. The project involves intrusion detection, manual and automated exploitation testing, security auditing, and secure deployment practices.
 
-Core Technologies
+WEEK 4: ADVANCED THREAT DETECTION AND HARDENING
 
-Backend: Node.js, Express.js
+Objective: Build a defensive perimeter to mitigate automated attacks and unauthorized scripts.
 
-Database: SQLite3
+Intrusion Detection (Fail2Ban): Configured a filter to monitor security.log for failed login attempts.
 
-Security Middleware: helmet, csurf, express-rate-limit, cors, cookie-parser
+Rule: 5 failed attempts within 2 minutes results in a 10-minute IP ban.
 
-Testing Tools: SQLMap, Burp Suite, Nmap, Nikto
+API Hardening (Rate Limiting): Implemented express-rate-limit to stop brute-force scripts.
 
-Implemented Security Features
+Logic: 10 attempts allowed per 10 minutes per IP.
 
-Week 4: Advanced Threat Detection
+Security Headers and CSP: Integrated Helmet.js for HSTS and implemented a Nonce-based CSP for Tailwind CSS to prevent XSS.
 
-Intrusion Detection: Configured Fail2Ban to monitor security.log and automatically ban IPs after 5 failed login attempts.
+WEEK 5: ETHICAL HACKING AND VULNERABILITY MITIGATION
 
-API Hardening: Implemented express-rate-limit to prevent brute-force attacks (10 attempts per 10 minutes).
+Objective: Act as an attacker to verify defenses and patch high-priority vulnerabilities.
 
-CORS Configuration: Configured CORS to restrict access to authorized origins only.
+Reconnaissance: * nmap -sV localhost -p 3000 (Verified port status)
 
-Security Headers: Integrated Helmet.js to enforce HSTS (HTTPS enforcement).
+Used Nikto to identify missing headers.
 
-Content Security Policy: Implemented a strict CSP to mitigate XSS and script injection.
+SQL Injection (SQLi) Exploitation: * Tool: sqlmap -u "http://localhost:3000/api/login-vulnerable" --data "email=test@test.com&password=123" --method POST --batch --dbs
 
-Week 5: SQLi and CSRF Mitigation
+Fix: Migrated to Prepared Statements: db.get("SELECT * FROM users WHERE email = ?", [email], ...)
 
-SQL Injection Prevention: Identified vulnerabilities in legacy routes using SQLMap and migrated all database queries to Prepared Statements (Parameterized Queries) to eliminate SQLi risks.
+CSRF Protection: Implemented csurf. Verified with Burp Suite (403 Forbidden on missing token).
 
-CSRF Protection: Implemented csurf middleware with secure cookie storage.
+WEEK 6: AUDITS AND SECURE DEPLOYMENT
 
-Validation: Verified protection by intercepting and manipulating requests in Burp Suite to ensure unauthorized state-changing requests are blocked.
+Objective: Implement a Secure Software Development Life Cycle (SSDLC).
 
-Ethical Hacking and Audit Results
+Automated Assessment (OWASP ZAP): Flagged SQLi as CRITICAL; verified Winston real-time logging.
 
-1. Reconnaissance
+Dependency Scanning (Snyk):
 
-Nmap Scan: Verified service availability on Port 3000.
+npx snyk test
 
-Nikto Audit: Scanned for misconfigured headers and outdated server signatures.
+npx snyk monitor
 
-2. SQLMap Exploitation (Task 2)
+Remediation: Updated bcrypt and inflight to resolve critical vulnerabilities.
 
-Vulnerability: The /api/login-vulnerable endpoint was found susceptible to UNION-based SQLi.
+Docker Hardening: Migrated to node:18-slim.
 
-Result: Successfully extracted database schema in a controlled test environment.
+docker build -t cybersec-app:v2 .
 
-Fix: Applied parameterized inputs to ensure user data is never treated as executable code.
+sudo npx snyk container test cybersec-app:v2
 
-3. Burp Suite CSRF Testing (Task 3)
+Result: 0 Critical / 0 High vulnerabilities.
 
-Attack Simulation: Attempted POST requests without the required CSRF-Token header.
+OWASP TOP 10 COMPLIANCE SUMMARY
 
-Defense Result: Server correctly responded with 403 Forbidden, validating the effectiveness of the mitigation.
+A01:2021-Broken Access Control: JWT validation & CORS.
 
-Installation and Setup
+A02:2021-Cryptographic Failures: Bcrypt (10 salt rounds).
 
-Clone the repository:
-git clone https://github.com/MRJOHN-arch/cybersec_internship_task
-cd cybersec_internship_tasks
+A03:2021-Injection: Parameterized Queries.
 
-Install Dependencies:
+A04:2021-Insecure Design: CSRF Middleware.
+
+A05:2021-Security Misconfiguration: Helmet.js headers.
+
+A09:2021-Security Logging: Winston persistent auditing.
+
+INSTALLATION AND SETUP
+
+git clone [URL]
 npm install
-
-Run the Server:
+npx snyk test
 node app2.js
-
-Monitor Security Logs:
 tail -f security.log
-
 
