@@ -80,7 +80,6 @@ db.serialize(() => {
     db.run("INSERT INTO users (email, password, role) VALUES (?, ?, ?)", ["user@example.com", hash, "user"]);
 });
 
-// Helper to escape HTML for the "Secure" demo part
 function escapeHTML(str) {
     return str.replace(/[&<>"']/g, function(m) {
         return {
@@ -275,11 +274,14 @@ app.get('/', csrfProtection, (req, res) => {
 
 app.post('/api/login-secure', csrfProtection, (req, res) => {
     const { email, password } = req.body;
+    const ip = req.ip || req.connection.remoteAddress; // Get Client IP
     db.get("SELECT * FROM users WHERE email = ?", [email], async (err, user) => {
         if (user && await bcrypt.compare(password, user.password)) {
-            logger.info(`Login_Success: ${email}`);
+            logger.info(`Login_Success: ${email} from ${ip}`);
             res.json({ success: true, role: user.role });
         } else {
+            // LOG THE FAILURE FOR FAIL2BAN
+            logger.warn(`AUTH_FAILURE: IP ${ip} tried to login as ${email}`);
             res.status(401).json({ error: "ACCESS_DENIED" });
         }
     });
@@ -287,12 +289,15 @@ app.post('/api/login-secure', csrfProtection, (req, res) => {
 
 app.post('/api/login-vulnerable', csrfProtection, (req, res) => {
     const { email, password } = req.body;
+    const ip = req.ip || req.connection.remoteAddress;
     const query = `SELECT * FROM users WHERE email = '${email}' AND password = '${password}'`;
     db.get(query, (err, row) => {
         if (row) {
-            logger.warn(`CRITICAL: SQLi_Bypass on ${email}`);
+            logger.warn(`CRITICAL: SQLi_Bypass on ${email} from ${ip}`);
             res.json({ bypass: true, role: row.role });
         } else {
+            // LOG THE FAILURE FOR FAIL2BAN
+            logger.warn(`AUTH_FAILURE: IP ${ip} attempted SQLi/Access on ${email}`);
             res.status(401).json({ error: "QUERY_EMPTY" });
         }
     });
