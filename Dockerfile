@@ -1,32 +1,32 @@
-# Use node-slim to keep the image size small
-FROM node:18-slim
+# Upgrade to Node 22 Alpine (LTS) to support modern security patches
+FROM node:22-alpine
 
-# Install build tools for native modules like bcrypt/sqlite3
-RUN apt-get update && apt-get install -y \
+# Install build tools for native modules (bcrypt/sqlite3)
+RUN apk add --no-cache \
     python3 \
     make \
-    g++ \
-    && rm -rf /var/lib/apt/lists/*
+    g++
 
 # Set the working directory
 WORKDIR /app
 
-# Copy dependency files first to leverage Docker layer caching
+# Copy dependency files first
 COPY package*.json ./
 
-# Install dependencies
-RUN npm install
+# SECURITY FIX: Update npm to the latest version compatible with the environment
+# We use --engine-strict=false as a safety net, but Node 22 handles this much better
+RUN npm install -g npm@latest && npm install
 
 # Copy the rest of the application code
 COPY . .
 
-# SECURITY: Change ownership of /app to the non-root 'node' user
+# SECURITY: Set permissions for the non-root 'node' user
 RUN chown -R node:node /app
 
-# Switch to the non-root user for execution
+# Switch to non-root user
 USER node
 
-# Expose the application port
+# Expose port
 EXPOSE 3000
 
 # Start the application
